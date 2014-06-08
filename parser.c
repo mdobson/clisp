@@ -5,6 +5,8 @@
 
 #define LASSERT(args, cond, err) if (!(cond)) { lval_del(args); return lval_err(err); }
 
+
+
 struct lval;
 struct lenv;
 typedef struct lval lval;
@@ -45,7 +47,7 @@ struct lval {
 
 
 lval* lval_num(long x);
-lval* lval_err(char* m);
+lval* lval_err(char* fmt, ...);
 lval* lval_sym(char* s);
 lval* lval_sexpr(void);
 lval* lval_add(lval* v, lval* x);
@@ -69,6 +71,7 @@ lval* lval_copy(lval* v);
 lenv* lenv_new(void);
 lval* lenv_get(lenv* e, lval*);
 lval* builtin_def(lenv* e, lval* a);
+
 void lenv_add_builtin(lenv* e, char* name, lbuiltin func);
 void lenv_add_builtins(lenv* e);
 void lenv_put(lenv* e, lval* k, lval* v);
@@ -77,6 +80,18 @@ void lval_expr_print(lval* v, char open, char close);
 void lval_print(lval* v);
 void lval_del(lval* v);
 void lval_println(lval* v);
+
+char* ltype_name(int t) {
+  switch(t) {
+    case LVAL_FUN: return "Function";
+    case LVAL_NUM: return "Number";
+    case LVAL_ERR: return "Error";
+    case LVAL_SYM: return "Symbol";
+    case LVAL_SEXPR: return "S-Expression";
+    case LVAL_QEXPR: return "Q-Expression";
+    default: return "Unknown";
+  }
+}
 
 lval* builtin_add(lenv* e, lval* a);
 lval* builtin_sub(lenv* e, lval* a);
@@ -97,11 +112,18 @@ lval* lval_num(long x) {
   return v;
 }
 
-lval* lval_err(char* m) {
+lval* lval_err(char* fmt, ...) {
   lval* v = malloc(sizeof(lval));
   v->type = LVAL_ERR;
-  v->err = malloc(strlen(m) + 1);
-  strcpy(v->err, m);
+
+  va_list va;
+  va_start(va, fmt);
+
+  v->err = malloc(512);
+
+  vsnprintf(v->err, 511, fmt, va);
+  v->err = realloc(v->err, strlen(v->err)+1);
+  va_end(va);
   return v;
 }
 
@@ -415,7 +437,7 @@ lval* lenv_get(lenv* e, lval* k) {
     if(strcmp(e->syms[i], k->sym) == 0) { return lval_copy(e->vals[i]); }
   }
 
-  return lval_err("Unbound Symbol");
+  return lval_err("Unbound Symbol '%s'", k->sym);
 }
 
 lval* builtin_def(lenv* e, lval* a) {
