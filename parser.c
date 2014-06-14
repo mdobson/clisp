@@ -73,6 +73,9 @@ struct lval {
   lval** cell;
 };
 
+int digitalRead(int pin) {
+  return 1;
+}
 
 lval* lval_num(long x);
 lval* lval_err(char* fmt, ...);
@@ -140,22 +143,26 @@ char* ltype_name(int t) {
   }
 }
 
-lval* builtin_add(lenv* e, lval* a);
-lval* builtin_sub(lenv* e, lval* a);
-lval* builtin_mul(lenv* e, lval* a);
-lval* builtin_div(lenv* e, lval* a);
-lval* builtin_gt(lenv* e, lval* a);
-lval* builtin_lt(lenv* e, lval* a);
-lval* builtin_ge(lenv* e, lval* a);
-lval* builtin_le(lenv* e, lval* a);
-lval* builtin_eq(lenv* e, lval* a);
-lval* builtin_ne(lenv* e, lval* a);
+lval* builtin_add(lenv* e, lval* a) { 
+  return builtin_op(e, a, "+"); 
+}
 
-lval* builtin_add(lenv* e, lval* a) { return builtin_op(e, a, "+"); }
-lval* builtin_sub(lenv* e, lval* a) { return builtin_op(e, a, "-"); }
-lval* builtin_mul(lenv* e, lval* a) { return builtin_op(e, a, "*"); }
-lval* builtin_div(lenv* e, lval* a) { return builtin_op(e, a, "/"); }
-lval* builtin_def(lenv* e, lval* a) { return builtin_var(e, a, "def"); }
+lval* builtin_sub(lenv* e, lval* a) {
+  return builtin_op(e, a, "-");
+}
+
+lval* builtin_mul(lenv* e, lval* a) {
+  return builtin_op(e, a, "*");
+}
+
+lval* builtin_div(lenv* e, lval* a) {
+  return builtin_op(e, a, "/");
+}
+
+lval* builtin_def(lenv* e, lval* a) {
+  return builtin_var(e, a, "def");
+}
+
 lval* builtin_put(lenv* e, lval* a) { return builtin_var(e, a, "="); }
 lval* builtin_gt(lenv* e, lval* a) { return builtin_ord(e, a, ">"); }
 lval* builtin_lt(lenv* e, lval* a) { return builtin_ord(e, a, "<"); }
@@ -170,6 +177,14 @@ lval* lval_num(long x) {
   v->type = LVAL_NUM;
   v->num = x;
   return v;
+}
+
+lval* builtin_digitalRead(lenv* e, lval* a) {
+  LASSERT_NUM("digitalRead", a, 1);
+  LASSERT_TYPE("digitalRead", a, 0, LVAL_NUM);
+
+  int read = digitalRead(a->cell[0]->num);
+  return lval_num(read);
 }
 
 lval* lval_read_str(mpc_ast_t* t) {
@@ -193,6 +208,8 @@ lval* builtin_print(lenv* e, lval* a) {
   return lval_sexpr();
 }
 
+
+
 lval* builtin_error(lenv* e, lval* a) {
   LASSERT_NUM("error", a, 1);
   LASSERT_TYPE("error", a, 0, LVAL_STR);
@@ -211,7 +228,7 @@ lval* builtin_load(lenv* e, lval* a) {
   if(mpc_parse_contents(a->cell[0]->str, Lispy, &r)) {
     lval* expr = lval_read(r.output);
     mpc_ast_delete(r.output);
-  
+
     while(expr->count) {
       lval* x = lval_eval(e, lval_pop(expr, 0));
       if(x->type == LVAL_ERR) { lval_println(x); }
@@ -794,6 +811,7 @@ void lenv_add_builtins(lenv* e) {
   lenv_add_builtin(e, "error", builtin_error);
   lenv_add_builtin(e, "print", builtin_print);
   lenv_add_builtin(e, "concat", builtin_concat);
+  lenv_add_builtin(e, "digitalRead", builtin_digitalRead);
 }
 
 lval* lval_call(lenv* e, lval* f, lval* a) {
