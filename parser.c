@@ -114,6 +114,7 @@ lval* lval_read_str(mpc_ast_t* t);
 lval* builtin_load(lenv* e, lval* a);
 lval* builtin_print(lenv* e, lval* a);
 lval* builtin_error(lenv* e, lval* a);
+lval* builtin_concat(lenv* e, lval* a);
 
 void lenv_add_builtin(lenv* e, char* name, lbuiltin func);
 void lenv_add_builtins(lenv* e);
@@ -276,6 +277,22 @@ lval* builtin_cmp(lenv* e, lval* a, char* op) {
   lval_del(a);
   lval* t = lval_num(r);
   return t;
+}
+
+lval* builtin_concat(lenv* e, lval* a) {
+  LASSERT_NUM("concat", a, 2);
+  LASSERT_TYPE("concat", a, 0, LVAL_STR);
+  LASSERT_TYPE("concat", a, 1, LVAL_STR);
+
+  char* aStr = a->cell[0]->str;
+  char* bStr = a->cell[1]->str;
+
+  char* concat = malloc(strlen(aStr) + strlen(bStr) + 2);
+
+  strcpy(concat, aStr);
+  strcat(concat, bStr);
+
+  return lval_str(concat);
 }
 
 lval* builtin_if(lenv* e, lval* a) {
@@ -776,6 +793,7 @@ void lenv_add_builtins(lenv* e) {
   lenv_add_builtin(e, "load", builtin_load);
   lenv_add_builtin(e, "error", builtin_error);
   lenv_add_builtin(e, "print", builtin_print);
+  lenv_add_builtin(e, "concat", builtin_concat);
 }
 
 lval* lval_call(lenv* e, lval* f, lval* a) {
