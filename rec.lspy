@@ -1,0 +1,21 @@
+(load "std.lspy")
+
+(fun {add x y} {+ x y})
+
+(fun {len l} {
+  if(== l {})
+    {0}
+    {+ 1 (len (tail l))}
+})
+
+(print
+  (
+    add 10 20
+  )
+)
+
+(print
+  (
+    len {1 2 3 4}
+  )
+)
