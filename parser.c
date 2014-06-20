@@ -597,19 +597,6 @@ lval* lval_join(lval* x, lval* y) {
   return x;
 }
 
-/*
-lval* builtin(lval* a, char* func) {
-  if(strcmp("list", func) == 0) { return builtin_list(a); }
-  if(strcmp("head", func) == 0) { return builtin_head(a); }
-  if(strcmp("tail", func) == 0) { return builtin_tail(a); }
-  if(strcmp("join", func) == 0) { return builtin_join(a); }
-  if(strcmp("eval", func) == 0) { return builtin_eval(a); }
-  if(strcmp("+-", func) == 0) { return builtin_op(a, func); }
-  lval_del(a);
-  return lval_err("Unknown Function");
-}
-*/
-
 lval* lval_fun(lbuiltin func) {
   lval* v = malloc(sizeof(lval));
   v->type = LVAL_FUN;
