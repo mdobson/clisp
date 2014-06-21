@@ -897,7 +897,7 @@ void lval_println(lval* v) {
   putchar('\n');
 }
 
-int main(int argc, char** argv) {
+int init(int argc, char** argv) {
   Number = mpc_new("number");
   Symbol = mpc_new("symbol");
   String = mpc_new("string");
